@@ -11,7 +11,7 @@ app.use(cors({
   origin: [
     "http://localhost:5500",
     "http://127.0.0.1:5500",
-    "https://areen3112.github.io/mingel-frontend/"
+    "https://areen3112.github.io"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
