@@ -93,7 +93,7 @@ const createGroups = async (req, res) => {
 
     const users = result.rows;
 
-    if (users.length < 4) {
+    if (users.length < 2) {
       return res.json({
         message: "Not enough users (minimum 4 required)",
       });
@@ -104,8 +104,8 @@ const createGroups = async (req, res) => {
 You are an expert in creating high-quality social groups.
 
 STRICT RULES:
-- Each group MUST have 4 to 6 members
-- NO group smaller than 4
+- Each group MUST have 2 to 6 members
+- NO group smaller than 2
 - NO leftover single users or very small groups
 - All users must be placed in a group
 - If total users are not perfectly divisible, make some groups of 5 or 6
@@ -149,7 +149,7 @@ Return ONLY valid JSON (no explanation, no markdown, no extra text):
 
     // 🔒 FILTER INVALID GROUPS
     let validGroups = parsed.groups ?
-      parsed.groups.filter((g) => g.members && g.members.length >= 4) : [];
+      parsed.groups.filter((g) => g.members && g.members.length >= 2) : [];
 
     // If AI fails badly → fallback to one big group
     if (validGroups.length === 0) {
