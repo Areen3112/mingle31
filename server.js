@@ -4,8 +4,28 @@ require("dotenv").config();
 
 const app = express();
 
+
+
+const allowedOrigins = [
+  "http://localhost:5500",
+  "http://127.0.0.1:5500",
+  "https://areen3112.github.io/mingel-frontend/"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow Postman
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  }
+}));
+
 // Middleware
-app.use(cors());
+
 app.use(express.json());
 
 // Make sure this path points to YOUR UPDATED file
