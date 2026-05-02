@@ -34,12 +34,12 @@ const getEvents = async (req, res) => {
 // ✅ JOIN EVENT
 const joinEvent = async (req, res) => {
   try {
-    const { eventId, email } = req.body;
+    const { event_id, email } = req.body;
 
     await pool.query(
       `INSERT INTO event_participants (event_id, user_email)
        VALUES ($1, $2)`,
-      [eventId, email]
+      [event_id, email]
     );
 
     // Send confirmation email
