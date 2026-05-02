@@ -3,9 +3,12 @@ const router = express.Router();
 
 const { getMatches, getDatingMatch } = require("../controllers/matchController");
 
-router.get("/:email", getMatches);
+// ✅ Specific FIRST
 router.get("/dating/:email", getDatingMatch);
+
+// ✅ Generic LAST
+router.get("/:email", getMatches);
 
 module.exports = router;
 
-console.log("✅ matchRoutes file loaded");
+console.log("✅ matchRoutes file loaded");;

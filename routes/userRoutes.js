@@ -7,9 +7,13 @@ const {
   getUserByEmail
 } = require("../controllers/userController");
 
-router.get("/:email", getUserByEmail); 
+// ✅ Specific routes FIRST
 router.get("/check/:email", checkUser);
-router.post("/", createUser);
 router.get("/profile/:email", getUserByEmail);
+
+// ✅ Generic LAST
+router.get("/:email", getUserByEmail);
+
+router.post("/", createUser);
 
 module.exports = router;
