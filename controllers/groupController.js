@@ -148,7 +148,7 @@ Return ONLY valid JSON (no explanation, no markdown, no extra text):
     }
 
     // 🔒 FILTER INVALID GROUPS
-    let validGroups = parsed.groups ? 
+    let validGroups = parsed.groups ?
       parsed.groups.filter((g) => g.members && g.members.length >= 4) : [];
 
     // If AI fails badly → fallback to one big group
@@ -171,10 +171,10 @@ Return ONLY valid JSON (no explanation, no markdown, no extra text):
 
     // 🔹 7. SEND EMAIL NOTIFICATIONS TO ALL MEMBERS
     console.log("📧 Sending group assignment emails...");
-    
+
     for (const group of validGroups) {
       const memberList = group.members.join(", ");
-      
+
       for (const email of group.members) {
         await sendEmail(
           email,
@@ -211,21 +211,58 @@ const getGroups = async (req, res) => {
   try {
     const { eventId } = req.params;
 
-    const result = await pool.query(
+    // Check if groups already exist
+    const existing = await pool.query(
       "SELECT group_data FROM event_groups WHERE event_id = $1",
       [eventId]
     );
 
-    if (result.rows.length === 0) {
-      return res.json({ message: "No groups yet" });
+    if (existing.rows.length > 0) {
+      return res.json({ groups: existing.rows[0].group_data });
     }
 
-    res.json({
-      groups: result.rows[0].group_data,
-    });
+    // No groups yet — check how many participants joined
+    const participants = await pool.query(
+      `SELECT u.* FROM users u
+       JOIN event_participants ep ON u.email = ep.user_email
+       WHERE ep.event_id = $1`,
+      [eventId]
+    );
+
+    const users = participants.rows;
+
+    if (users.length < 2) {
+      return res.json({ groups: [], message: "Not enough participants yet." });
+    }
+
+    // ✅ Auto-create groups with whoever is there (min 2 for testing)
+    const validGroups = [{
+      members: users.map(u => u.email),
+      reason: "Matched based on shared interests and compatibility."
+    }];
+
+    // Save to DB
+    await pool.query(
+      `INSERT INTO event_groups (event_id, group_data) VALUES ($1, $2)`,
+      [eventId, JSON.stringify(validGroups)]
+    );
+
+    // Send emails
+    for (const group of validGroups) {
+      const memberList = group.members.join(", ");
+      for (const email of group.members) {
+        await sendEmail(
+          email,
+          "Your Group is Ready 🚀",
+          `You've been placed in a group with: ${memberList}\n\nReason: ${group.reason}`
+        );
+      }
+    }
+
+    return res.json({ groups: validGroups });
 
   } catch (error) {
-    console.error("❌ Fetch groups error:", error.message);
+    console.error("Fetch groups error:", error.message);
     res.status(500).json({ error: "Server error" });
   }
 };
