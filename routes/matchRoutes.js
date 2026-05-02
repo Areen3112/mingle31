@@ -9,6 +9,7 @@ router.get("/dating/:email", getDatingMatch);
 // ✅ Generic LAST
 router.get("/:email", getMatches);
 
+
+console.log("✅ matchRoutes file loaded");
 module.exports = router;
 
-console.log("✅ matchRoutes file loaded");;

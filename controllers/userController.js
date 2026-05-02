@@ -29,32 +29,27 @@ const checkUser = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     const { email, name, age, intent, personality_score, ambition_score,
-      interests, bio, gender, preference } = req.body;   // ← was interested_in
+      interests, bio, gender, preference } = req.body;
 
+    // ✅ FIXED: Pass raw array — pg driver handles jsonb serialization automatically
+    // ❌ REMOVE: JSON.stringify(interests) — double-serializes and breaks jsonb column
+    const interestsValue = Array.isArray(interests) ? interests : [];
 
-    const interestsJson = Array.isArray(interests)
-      ? JSON.stringify(interests)
-      : interests;
-
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO users 
-  (email, name, age, intent, personality_score, ambition_score, interests, bio, gender, preference, profile_completed)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true)`,
-      [email, name, age, intent, personality_score, ambition_score,
-        interestsJson, bio, gender || null, preference || null]   // ← was interested_in
+       (email, name, age, intent, personality_score, ambition_score, interests, bio, gender, preference, profile_completed)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, true)
+       ON CONFLICT (email) DO NOTHING`,
+      [email, name, age ?? null, intent, personality_score ?? null,
+       ambition_score ?? null, JSON.stringify(interestsValue),
+       bio ?? null, gender ?? null, preference ?? null]
     );
 
-    res.json({
-      success: true,
-      message: "User created successfully",
-    });
+    res.json({ success: true, message: "User created successfully" });
 
   } catch (error) {
-    console.error("Create user error:", error.message);
-    res.status(500).json({
-      error: "Server error",
-      details: error.message
-    });
+    console.error("Create user error:", error.message); // ← this tells you EXACTLY what broke
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 };
 
